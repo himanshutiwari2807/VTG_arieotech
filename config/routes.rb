@@ -13,4 +13,5 @@ Rails.application.routes.draw do
 
   get 'videos/translate', to: 'videos#generate_translation'
   get 'videos/summarize', to: 'videos#generate_summary'
+  get 'videos/generate_mcq', to: 'videos#generate_mcq'
 end
