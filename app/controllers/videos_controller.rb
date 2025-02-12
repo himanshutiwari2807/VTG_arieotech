@@ -77,7 +77,26 @@ class VideosController < ApplicationController
         translated_file = translator_service.translate
         send_file translated_file, type: 'application/json', disposition: 'attachment'
       else
-        render json: { error: 'Translated file not available yet.' }, status: :not_found
+        render json: { error: 'JSON file not available yet.' }, status: :not_found
+      end
+    else
+      render json: { error: 'Video URL and Language is required.' }, status: :unprocessable_entity
+    end
+  end
+
+  def generate_summary
+    video_url = params[:url]
+
+    if video_url.present?
+      video_id = get_video_id(video_url)
+      folder_path = Rails.root.join('public', 'video', video_id)
+      txt_file_path = File.join(folder_path, 'audio.txt')
+      if File.exist?(txt_file_path)
+        summary_service = SummaryService.new(txt_file_path)
+        summarized_file = summary_service.generate_summary
+        send_file summarized_file, type: 'application/json', disposition: 'attachment'
+      else
+        render json: { error: 'TXT file not available yet.' }, status: :not_found
       end
     else
       render json: { error: 'Video URL and Language is required.' }, status: :unprocessable_entity

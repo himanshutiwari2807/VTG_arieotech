@@ -12,4 +12,5 @@ Rails.application.routes.draw do
   resources :videos, only: [:create]
 
   get 'videos/translate', to: 'videos#generate_translation'
+  get 'videos/summarize', to: 'videos#generate_summary'
 end

@@ -41,8 +41,6 @@ class TranslationService
       @service.save_to_file(output_file, translated_text)
       output_file
     end
-
-    
   end
 end
 
