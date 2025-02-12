@@ -4,13 +4,13 @@ class VideosController < ApplicationController
     video_url = video_params[:url]
 
     if video_url.present?
-      video_id = video_url.split('=')[-1]
+      video_id = get_video_id(video_url)
       # Check if the video URL exists, create it if not
       video = Video.find_or_create_by(url: video_id)
 
       if video.persisted?
         # Run the Python script if the URL is saved successfully
-        folder_path = Rails.root.join('public', 'video', video_id)
+        folder_path = root_video_folder_path(video_id)
 
         if Dir.exist?(folder_path)
           json_file_path = File.join(folder_path, 'audio.json')
@@ -44,11 +44,11 @@ class VideosController < ApplicationController
   def show
     video_url = video_params[:url]
     if video_url
-      video_id = URI(video_url).query.split("&").find { |param| param.start_with?("v=") }&.split("=")&.last
+      video_id = 
       video = Video.find_by(url: video_id)
       if video
         video_id = video.url.split('=')[-1]
-        folder_path = Rails.root.join('public', 'video', video_id)
+        folder_path = root_video_folder_path(video_id)
 
         # Check if translated file exists
         translated_file = File.join(folder_path, 'translated.json')
@@ -65,10 +65,76 @@ class VideosController < ApplicationController
     end
   end
 
+  def generate_translation
+    video_url = params[:url]
+    language = params[:language]
+    if video_url.present? && language.present?
+      video_id = get_video_id(video_url)
+      folder_path = root_video_folder_path(video_id)
+      json_file_path = File.join(folder_path, 'audio.json')
+      if File.exist?(json_file_path)
+        translator_service = TranslationService.new(json_file_path, language)
+        translated_file = translator_service.translate
+        send_file translated_file, type: 'application/json', disposition: 'attachment'
+      else
+        render json: { error: 'JSON file not available yet.' }, status: :not_found
+      end
+    else
+      render json: { error: 'Video URL and Language is required.' }, status: :unprocessable_entity
+    end
+  end
+
+  def generate_summary
+    video_url = params[:url]
+
+    if video_url.present?
+      video_id = get_video_id(video_url)
+      folder_path = root_video_folder_path(video_id)
+      txt_file_path = File.join(folder_path, 'audio.txt')
+      if File.exist?(txt_file_path)
+        summary_service = SummaryService.new(txt_file_path)
+        summarized_file = summary_service.generate_summary
+        send_file summarized_file, type: 'application/json', disposition: 'attachment'
+      else
+        render json: { error: 'TXT file not available yet.' }, status: :not_found
+      end
+    else
+      render json: { error: 'Video URL and Language is required.' }, status: :unprocessable_entity
+    end
+  end
+
+  def generate_mcq
+    video_url = params[:url]
+    if video_url.present?
+      video_id = get_video_id(video_url)
+      folder_path = root_video_folder_path(video_id)
+      json_file_path = File.join(folder_path, 'audio.json')
+
+      if File.exist?(json_file_path)
+        mcq_generator = McqService.new(json_file_path)
+
+        summarized_file = mcq_generator.generate_mcq
+        send_file summarized_file, type: 'application/json', disposition: 'attachment'
+      else
+        render json: { error: 'JSON file not available yet.' }, status: :not_found
+      end
+    else
+      render json: { error: 'Video URL and Language is required.' }, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def video_params
     params.require(:video).permit(:url)
+  end
+
+  def get_video_id(video_url)
+    URI(video_url).query.split("&").find { |param| param.start_with?("v=") }&.split("=")&.last
+  end
+
+  def root_video_folder_path(video_id)
+    Rails.root.join('public', 'video', video_id)
   end
 end
 

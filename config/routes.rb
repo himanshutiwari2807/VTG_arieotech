@@ -9,5 +9,9 @@ Rails.application.routes.draw do
   # root "posts#index"
 
   resources :file_uploads, only: [:create, :show]
-  resources :videos, only: [:create, :show]
+  resources :videos, only: [:create]
+
+  get 'videos/translate', to: 'videos#generate_translation'
+  get 'videos/summarize', to: 'videos#generate_summary'
+  get 'videos/generate_mcq', to: 'videos#generate_mcq'
 end
