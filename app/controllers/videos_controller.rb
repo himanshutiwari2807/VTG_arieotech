@@ -4,7 +4,7 @@ class VideosController < ApplicationController
     video_url = video_params[:url]
 
     if video_url.present?
-      video_id = video_url.split('=')[-1]
+      video_id = get_video_id(video_url)
       # Check if the video URL exists, create it if not
       video = Video.find_or_create_by(url: video_id)
 
@@ -44,7 +44,7 @@ class VideosController < ApplicationController
   def show
     video_url = video_params[:url]
     if video_url
-      video_id = URI(video_url).query.split("&").find { |param| param.start_with?("v=") }&.split("=")&.last
+      video_id = 
       video = Video.find_by(url: video_id)
       if video
         video_id = video.url.split('=')[-1]
@@ -65,10 +65,33 @@ class VideosController < ApplicationController
     end
   end
 
+  def generate_translation
+    video_url = params[:url]
+    language = params[:language]
+    if video_url.present? && language.present?
+      video_id = get_video_id(video_url)
+      folder_path = Rails.root.join('public', 'video', video_id)
+      json_file_path = File.join(folder_path, 'audio.json')
+      if File.exist?(json_file_path)
+        translator_service = TranslationService.new(json_file_path, language)
+        translated_file = translator_service.translate
+        send_file translated_file, type: 'application/json', disposition: 'attachment'
+      else
+        render json: { error: 'Translated file not available yet.' }, status: :not_found
+      end
+    else
+      render json: { error: 'Video URL and Language is required.' }, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def video_params
     params.require(:video).permit(:url)
+  end
+
+  def get_video_id(video_url)
+    URI(video_url).query.split("&").find { |param| param.start_with?("v=") }&.split("=")&.last
   end
 end
 
