@@ -9,4 +9,5 @@ Rails.application.routes.draw do
   # root "posts#index"
 
   resources :file_uploads, only: [:create, :show]
+  resources :videos, only: [:create, :show]
 end
