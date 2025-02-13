@@ -44,7 +44,7 @@ class VideosController < ApplicationController
   def show
     video_url = video_params[:url]
     if video_url
-      video_id = 
+      video_id =
       video = Video.find_by(url: video_id)
       if video
         video_id = video.url.split('=')[-1]
@@ -94,7 +94,7 @@ class VideosController < ApplicationController
       if File.exist?(txt_file_path)
         summary_service = SummaryService.new(txt_file_path)
         summarized_file = summary_service.generate_summary
-        send_file summarized_file, type: 'application/json', disposition: 'attachment'
+        send_file summarized_file, type: 'text/html', disposition: 'attachment'
       else
         render json: { error: 'TXT file not available yet.' }, status: :not_found
       end
@@ -137,4 +137,3 @@ class VideosController < ApplicationController
     Rails.root.join('public', 'video', video_id)
   end
 end
-

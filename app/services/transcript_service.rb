@@ -15,7 +15,7 @@ class TranscriptService
     puts " Downloading audio..."
     system(download_command)
 
-    transcription_command = "whisper #{audio_file} --model base --output_dir #{@output_folder}"
+    transcription_command = "whisper #{audio_file} --model base --verbose True --output_dir #{@output_folder}"
     puts "Transcribing..."
     stdout, stderr, status = Open3.capture3(transcription_command)
     puts "Transcribing completed successfully"

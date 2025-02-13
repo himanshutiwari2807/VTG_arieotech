@@ -9,13 +9,13 @@ class SummaryService
   def generate_summary
     return puts "File not found: #{@input_file}" unless File.exist?(@input_file)
 
-    output_file = File.join(File.dirname(@input_file), "summary.txt")
+    output_file = File.join(File.dirname(@input_file), "summary.html")
     if File.exist?(output_file)
       output_file
     else
       text = File.read(@input_file).strip
 
-      prompt = "Summarize the following text into key points with beautiful html tags:\n\n#{text}"
+      prompt = "Summarize the following text into key points with beautiful html file:\n\n#{text}"
 
       summary_text = @service.request_ai(prompt)
 
@@ -24,4 +24,3 @@ class SummaryService
     end
   end
 end
-
