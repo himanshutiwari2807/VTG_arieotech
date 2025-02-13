@@ -1,3 +1,4 @@
+require 'json'
 require_relative 'azure_open_ai_service'
 
 class TranslationService
@@ -32,15 +33,39 @@ class TranslationService
 
     output_file = File.join(File.dirname(@input_file), "#{target_lang}.json")
 
-    if File.exist?(output_file)
+    return output_file if File.exist?(output_file)
+
+    prompt = <<~PROMPT
+      Translate the following text into #{target_lang}. Provide the output as a valid JSON array without any introduction:
+
+      #{text}
+    PROMPT
+
+    translated_text = @service.request_ai(prompt)
+    cleaned_json = extract_json(translated_text)
+
+    if cleaned_json
+      @service.save_to_file(output_file, cleaned_json)
       output_file
     else
-      prompt = "Translate the following text into #{target_lang}:\n\n#{text}"
-      translated_text = @service.request_ai(prompt)
+      puts "Invalid JSON response received from AI"
+      nil
+    end
+  end
 
-      @service.save_to_file(output_file, translated_text)
-      output_file
+  private
+
+  def extract_json(response)
+    match = response.match(/\[.*\]/m) # Extracts content within JSON array brackets
+    return unless match
+
+    json_string = match[0]
+
+    begin
+      parsed = JSON.parse(json_string)
+      JSON.pretty_generate(parsed) # Ensures valid, formatted JSON
+    rescue JSON::ParserError
+      nil
     end
   end
 end
-
